@@ -1,0 +1,273 @@
+---
+title: "Cross sectional and first-difference models"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+library(tidyverse)
+library(sf)
+library(broom.mixed)
+library(plm)
+library(car)
+library(nlme)
+library(lfe)
+library(lme4)
+library(lmerTest)
+library(Hmisc)
+library(sjstats)
+dollar_pal<-c("#303133","#e8ba14","#62B33C","#EE3124")
+
+factor_list<-c("C8","C2","C3","C4","C5","C7","C9","C10","C12","C13","C14")
+factor_list_multilevel<-c("C8","C2","C2_div","C3","C3_div","C4","C4_div","C5","C7","C7_div",
+                "C9","C9_div","C10","C10_div","C12","C13","C13_div","C14")
+
+term_order<-c("White, low div","Asian, mod div","Black, mod div","Black, low div","Latino, mod div","Latino, low div","Native, mod div","Native, low div","High diversity","Other, mod div","Med. income ($1k)","% in poverty","% w/income >$150K","Supermarket dist","Grocery dist","Population density")
+
+
+```
+
+First, I load the model data for dollar stores, which includes all years from 2008-2015. The model data file can be downloaded from the Github repo--it is too large for Github's limits.
+
+```{r cars}
+alldata_model<-read_csv("data/modeldata.csv")
+
+tracts<-st_read("data/us_tracts_demog2013.gpkg")
+
+stores<-unique(alldata_model$store)
+
+years_cs<-c("Y2008","Y2011","Y2015")
+yearstorelist<-expand.grid(stores,years_cs) %>%
+  mutate(ys=paste(Var2,Var1,sep="_"))
+```
+
+I also factor the mixed metro data so that White md (the most common category) is the reference. I also adjust the units for median income and median value (though I don't use the latter). Lastly, I topcode population density at 1.5 IQR above the 3rd quartile, since there's a number of very large outliers.
+
+```{r}
+classfactor<-c("White md","White ld","Asian md","Black md","Black ld","Latino md","Latino ld",
+               "NatAm md","NatAm ld","High diversity","Other md")
+
+#Select only classifications with >~100 observations
+mmclasses<-c("White md","White ld","Asian md","Black ld","Black md","Latino ld","Latino md","High diversity")
+
+#Determine pop density topcode
+popdens_topcode<-summary(alldata_model$popdens)[5]+(1.5*IQR(alldata_model$popdens))
+
+alldata_mmyr<-alldata_model %>%
+  mutate(med_val1k=med_val/1000,
+         med_inc1k=med_inc/1000,
+         entropy=entropy*100) %>%
+  mutate(class_char_shrt=factor(class_char_shrt),
+         class_char_shrt=fct_relevel(class_char_shrt,classfactor),
+         popdens_topcode=if_else(popdens>popdens_topcode,popdens_topcode,popdens)) %>%
+  mutate(msa_fips1=factor(msa_fips))
+ 
+alldata_mmyr_filter<-alldata_mmyr %>%
+  filter(class_char_shrt %in% mmclasses) %>%
+  distinct
+```
+
+
+###Mixed effects criss sectional models
+
+We'll look at all chains and each invidually in 2008, 2011, and 2015. I also tried using models with both the rate and entropy terms (which together create the mixed metro index), but these were more difficult to interpret, since entropy means something different depending on the racial classification (e.g., low diversity for White neighborhoods is not the same as low density for African-American ones).
+
+This is also a mixed-effects model. In this case, I moved the msa term to a mixed effects term. The ICC statistic shows a notable effect from this, and it better reflects the MSA role as a nested categorical variable compared to using it as another regression term.
+
+```{r}
+ lme_store_cs<-function(year_store){
+  year_select<-substr(year_store,1,5)
+  store_select<-substr(year_store,7,nchar(year_store))
+  data_sel<-alldata_mmyr %>%
+    filter(store==store_select & year==year_select) 
+  
+  lme_fdmodel_sel<-lmer(log(wdist_na)~class_char_shrt+pov_pct+inc150k_pct+
+    Supermarket+Grocer+popdens_topcode+(1|msa_fips1),
+  data=data_sel,REML=FALSE)
+
+  broom.mixed::tidy(lme_fdmodel_sel) %>%
+    mutate(store=store_select,year=year_select,
+           est_upper=exp(estimate+(1.96*std.error)),
+         est_lower=exp(estimate-(1.96*std.error))) %>%
+    cbind(data.frame(performance::icc(lme_fdmodel_sel)[1])) %>%
+    mutate(est_exp=exp(estimate),
+           AIC=AIC(lme_fdmodel_sel),
+           loglik=logLik(lme_fdmodel_sel))
+ }
+
+cs_terms<-read_csv("data/cs_terms.csv") %>%
+  mutate(term_names=factor(term_label,levels=term_order))
+
+cs_me_tables<-map_df(yearstorelist$ys,lme_store_cs) %>%
+  mutate(year_num=substr(year,2,5)) %>%
+  left_join(cs_terms) %>%
+  unique()
+
+cs_me_tables_format<-cs_me_tables %>%
+    mutate(ci=paste("(",round(est_lower,2),",",round(est_upper,2),")",sep=""),
+           year=substr(year,2,5),
+           est_exp=round(est_exp,3),
+           store_year=paste(store,year,sep="_")) %>%
+  select(term_label,store_year,est_exp,ci) %>%
+  gather(est_exp:ci,key="stat",value="value") %>%
+  arrange(store_year,term_label)
+
+write_csv(cs_me_tables_format,"data/cs_me_results.csv")
+
+cs_me_tables1<-cs_me_tables %>%
+  filter(!term %in% c("(Intercept)","class_char_shrtAsian ld","class_char_shrtNatAm md",
+                       "class_char_shrtNatAm ld","class_char_shrtOther ld","class_char_shrtOther md", 
+                      "sd__(Intercept)","sd__Observation")) %>%
+  gather(est_upper,est_lower,key=ci_type,value=ci_value) 
+
+ggplot(cs_me_tables1) +
+  geom_point(aes(x=year_num,y=est_exp,group=store,color=store),
+             position=position_dodge(width=0.4),alpha=0.8)+
+  geom_line(aes(x=year_num,y=ci_value,color=store),
+            position=position_dodge(width=0.4),alpha=0.8)+
+  geom_hline(yintercept=1,colour="#990000", linetype="dashed")+
+  ylab("Exponentiated Coefficient")+xlab("")+
+  theme_minimal()+
+   scale_colour_manual(values=dollar_pal)+
+  theme(legend.position="bottom",
+        legend.title=element_blank(),
+        text=element_text(size=16),
+        axis.text.x=element_text(angle=45,hjust=1))+
+  facet_wrap(~term_names,scales="free_y")
+
+ggsave("graphics/csme_models.pdf",width=10,height=6)
+ggsave("graphics/csme_models.png",width=10,height=6)
+
+modelfits<-cs_me_tables %>%
+  select(store,year,AIC,loglik) %>%
+  unique()
+write_csv(modelfits,"data/cs_modelfit.csv")
+
+```
+
+Look at fits for a null model across years. This gives us a basis for overall measures of model fit (AIC and log-liklihood)
+
+```{r}
+ lme_store_cs_null<-function(year_store){
+  year_select<-substr(year_store,1,5)
+  store_select<-substr(year_store,7,nchar(year_store))
+  data_sel<-alldata_mmyr %>%
+    filter(store==store_select & year==year_select) 
+  
+  lme_fdmodel_sel<-lmer(log(wdist_na)~(1|msa_fips1),
+  data=data_sel,REML=FALSE)
+
+  broom.mixed::tidy(lme_fdmodel_sel) %>%
+    mutate(store=store_select,year=year_select,
+           est_upper=exp(estimate+(1.96*std.error)),
+         est_lower=exp(estimate-(1.96*std.error))) %>%
+    cbind(data.frame(performance::icc(lme_fdmodel_sel)[1])) %>%
+    mutate(est_exp=exp(estimate),
+           AIC=AIC(lme_fdmodel_sel),
+           loglik=logLik(lme_fdmodel_sel))
+ }
+
+cs_me_tables_null<-map_df(yearstorelist$ys,lme_store_cs_null) %>%
+  mutate(year_num=substr(year,2,5)) %>%
+  left_join(cs_terms) %>%
+  unique()
+
+modelfits_null<-cs_me_tables_null %>%
+  select(store,year,AIC,loglik) %>%
+  unique()
+```
+
+
+####Mixed effects first-difference
+
+Since metro area/region seems to matter a lot for these models, I use a multilevel model, which shows a notable improvement in log likelihood over a OLS where metro area is excluded. I'm using msa fips codes for that. I also tried including cdivision, but the models were worse compared to msa. Using cdivision and msa was equivalent, so going with the simpler model.
+
+Calculating the difference between years. I use 2011 as that's the first year that the USDA SNAP data appears to match well with the counts I saw on ReferenceUSA.
+```{r}
+alldata_mmyr_fd<-alldata_mmyr_filter %>%
+  filter(year %in% c("Y2011","Y2015")) %>%
+  mutate(popdens_topcode=as.numeric(popdens_topcode)) %>%
+  select(gisjn_tct,year,msa_fips1,store,wdist_na,white_pct:pov_pct,hisp_pct,
+         class_char_shrt,entropy,Supermarket,Grocer,popdens_topcode) %>%
+  distinct() %>%
+  mutate(dummy=1) %>%
+  spread(class_char_shrt,dummy,fill=0) %>%
+  gather(c(wdist_na:`High diversity`),key=var,value=value) %>%
+  spread(year,value) %>%
+  mutate(diff=Y2015-Y2011) %>%
+  select(-Y2011,-Y2015) %>% 
+  filter(is.na(diff)==FALSE) %>%
+  spread(var,diff) 
+
+#Create bottom code for distance change--lots of very low values
+alldata_mmyr_fd<-alldata_mmyr_fd %>%
+  mutate(wdist_na1=if_else(wdist_na < -40,-40,wdist_na))
+
+```
+
+Running the model. I keep white_pct out of this model because of problems with multicollinearity, as measured through the vif function below. It effectively functions as a reference.
+
+```{r}
+vif(lmer(wdist_na~asian_pct+afam_pct+hisp_pct+pov_pct+inc150k_pct+Supermarket+Grocer+popdens_topcode+(1|msa_fips1),
+  data=alldata_mmyr_fd %>%
+    filter(store=="Closest"),REML=FALSE))
+
+lme_store<-function(storename){
+  data_sel<-alldata_mmyr_fd %>%
+    filter(store==storename) 
+  
+  lme_fdmodel_sel<-lmer(wdist_na~afam_pct+hisp_pct+asian_pct+pov_pct+                        inc150k_pct+Supermarket+Grocer+popdens_topcode+
+                   (1|msa_fips1),
+  data=data_sel,REML=FALSE)
+
+  broom.mixed::tidy(lme_fdmodel_sel) %>%
+    mutate(store=storename) %>%
+    cbind(data.frame(performance::icc(lme_fdmodel_sel)[1]))
+}
+
+lme_models<-map_df(stores,lme_store) 
+write_csv(lme_models,"data/lme_models.csv")
+
+terms<-read_csv("data/lme_terms.csv") %>%
+  mutate(name_fact=factor(name,levels=c("% African-American","% Asian American",
+                                        "% Hispanic",
+                                        "% in poverty","% w/income >$150K","Supermarket distance","Grocery distance","Pop. density")))
+
+lme_model_graph<-lme_models %>%
+  filter(!term %in% c("sd__(Intercept)","(Intercept)","sd__Observation")) %>%
+  mutate(error=1.68*std.error, #P value produced by lmerTest corresponds more closely with 0.1 confidence interval
+         est_upper=estimate+error,
+         est_lower=estimate-error) %>%
+  gather(est_upper,est_lower,key=errtype,value=errrange) %>%
+  left_join(terms) 
+
+ggplot(lme_model_graph)+
+  geom_point(aes(x=name_fact,y=estimate,color=store),
+             position=position_dodge(width=0.4))+
+  geom_line(aes(x=name_fact,y=errrange,color=store),
+            position=position_dodge(width=0.4))+
+  geom_hline(yintercept=0,colour="#990000", linetype="dashed")+
+  theme_minimal()+
+  xlab("")+
+  ylab("Model coefficient")+
+  labs(color="Chain name")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  scale_colour_manual(values=dollar_pal)
+
+ggsave("graphics/lmer_model.pdf",height=5,width=9)
+ggsave("graphics/lmer_model.png",height=3.5,width=6)
+```
+
+We can create a table with the model results as well.
+
+```{r}
+lme_models_tbl<-lme_model_graph %>%
+  spread(errtype,errrange) %>%
+  mutate(ci=paste("(",round(est_upper,3),",",round(est_lower,3),")",sep="")) %>%
+  select(store,term,estimate,ci)
+
+write_csv(lme_models_tbl,"data/lmer_model_table.csv")
+```

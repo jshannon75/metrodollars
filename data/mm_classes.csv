@@ -1,0 +1,14 @@
+class_mm,class_mm_char,class_char_shrt,color
+2,"White, low diversity",White ld,#FF9900
+3,"Black, low diversity",Black ld,#66CC00
+4,"Asian, low diversity",Asian ld,#FF6666
+5,"Native American, low diversity",NatAm ld,#FFFF00
+6,"Other, low diversity",Other ld,#777777
+7,"Latino, low diversity",Latino ld,#9966FF
+8,"White, moderate diversity",White md,#FFCC99
+9,"Black, moderate diversity",Black md,#99FF99
+10,"Asian, moderate diversity",Asian md,#FF9999
+11,"Native American, moderate diversity",NatAm md,#FFFF99
+12,"Other, moderate diversity",Other md,#CCCCCC
+13,"Latino, moderate diversity",Latino md,#CC99FF
+14,High diversity,High diversity,#99752E

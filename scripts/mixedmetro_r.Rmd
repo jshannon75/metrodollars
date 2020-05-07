@@ -1,0 +1,182 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+defined ---
+title: "Mixed Metro for 2010 tracts"
+output: html_notebook
+---
+
+First, we'll load the necessary data from NHGIS and then calculate rates for our demographic groups.
+
+```{r}
+library(tidyverse)
+library(ipumsr)
+
+##NHGIS####
+
+#Identify relevant variable names in each year
+
+# files<-data.frame(list.files(path="nhgis/",pattern=".txt")) 
+# names(files)<-"files"
+# 
+# files<-files %>%
+#   mutate(files1=paste("nhgis/",files,"_",sep=""))
+# 
+# read_code<-function(filename){
+#   codebook_file<-paste(substr(filename,1,38),"_codebook.txt",sep="")
+#   census_code<-read_ipums_codebook(codebook_file)
+# 
+#   
+#   code_names<-bind_cols(data.frame(census_code$var_info$var_name),data.frame(census_code$var_info$var_label))[1:56,] %>%
+#     mutate(year=paste("Y",substr(filename,29,32),sep="")) %>%
+#     spread(year,census_code.var_info.var_name) %>%
+#     rename(var_label=census_code.var_info.var_label)
+# }
+# 
+# census_code<-map(files$files1,read_code) %>%
+#   reduce(left_join,by="var_label")
+# 
+# write_csv(census_code,"nhgis/nhgis_vars.csv")
+
+#I created generic variable names across years
+
+census_code1<-read_csv("data/nhgis_data/nhgis_vars.csv")
+
+col_names<-c(census_code1$var_gen,"year")
+
+data_files<-data.frame(list.files(path="data/nhgis_data",pattern="tract.csv")) %>%
+  mutate(files1=paste("data/nhgis_data/",
+                      list.files.path....data.nhgis_data...pattern....tract.csv..,sep=""))
+
+read_data<-function(filename){
+  year_num<-paste("Y",substr(filename,39,42),sep="")
+  
+  codes<-census_code1 %>%
+    select(var_gen,year_num) %>%
+    rename(year_code=year_num)
+  
+  df<-read_csv(filename) %>%
+    select(.dots = codes$year_code) %>%
+    mutate(year=year_num) 
+}
+
+census_data<-map_df(data_files$files1,read_data) 
+names(census_data)<-col_names
+census_data_sum<-census_data %>%
+  gather(hisp:total,key="var",value="value") %>%
+  mutate(var=substr(var,1,5)) %>%
+  group_by(GISJOIN,year,var) %>%
+  summarise(value=sum(value)) %>%
+  mutate(value=if_else(value==0,0.001,value)) %>%
+  spread(var,value) %>%
+  ungroup()
+
+##Calculate figures for MM
+census_data_format<-census_data_sum %>%
+  mutate(white_rt=white/total,
+         black_rt=afam/total,
+         nam_rt=namin/total,
+         asian_rt=asian/total,
+         other_rt=other/total,
+         hisp_rt=hisp/total) %>%
+  select(GISJOIN,year,total,white_rt:hisp_rt)
+```
+
+
+Next we can develop the entropy for each tract.
+
+```{r}
+census_data_entropy<-census_data_format %>%
+  mutate(entropy=-((white_rt*log(white_rt))+(black_rt*log(black_rt))+(nam_rt*log(nam_rt))+(asian_rt*log(asian_rt))+                    (other_rt*log(other_rt))+(hisp_rt*log(hisp_rt)))/log(6))
+
+#Original Stata code: -((white*ln(white))+(black*ln(black))+(nam*ln(nam))+(asian*ln(asian))+(other*ln(other))+(hispanic*ln(hispanic)))/ln(6)
+```
+
+We can then classify the data.
+
+```{r}
+census_data_class<-census_data_entropy %>%
+  mutate(class=0,
+         class=case_when(white_rt>=black_rt & white_rt>=nam_rt & white_rt>=asian_rt & white_rt>=other_rt & 
+                           white_rt>=hisp_rt & entropy<=.3707~2,
+                         white_rt>0.8~2,
+                         black_rt>=white_rt & black_rt>=nam_rt & black_rt>=asian_rt & black_rt>=other_rt & 
+                           black_rt>=hisp_rt & entropy<=.3707~3,
+                         black_rt>.8~3,
+                         asian_rt>=white_rt & asian_rt>=nam_rt & asian_rt>=black_rt & asian_rt>=other_rt & 
+                           asian_rt>=hisp_rt & entropy<=.3707~4,
+                         asian_rt>0.8~4,
+                         nam_rt>=white_rt & nam_rt>=asian_rt & nam_rt>=black_rt & nam_rt>=other_rt & 
+                           nam_rt>=hisp_rt & entropy<=.3707~5,
+                         nam_rt>0.8~5,
+                         other_rt>=white_rt & other_rt>=nam_rt & other_rt>=black_rt & other_rt>=asian_rt & 
+                           other_rt>=hisp_rt & entropy<=.3707~6,
+                         other_rt>0.8~6,
+                         hisp_rt>=white_rt & hisp_rt>=nam_rt & hisp_rt>=black_rt & hisp_rt>=asian_rt & 
+                           hisp_rt>=other_rt & entropy<=.3707~7,
+                         hisp_rt>0.8~7,
+                         white_rt>=black_rt & white_rt>=nam_rt & white_rt>=asian_rt & white_rt>=other_rt & 
+                           white_rt>=hisp_rt & .3707<entropy & entropy<.7414 & white_rt<=.8~8,
+                         black_rt>=white_rt & black_rt>=nam_rt & black_rt>=asian_rt & black_rt>=other_rt & 
+                           black_rt>=hisp_rt & .3707<entropy & entropy<.7414 & black_rt<=.8~9,
+                         asian_rt>=white_rt & asian_rt>=nam_rt & asian_rt>=black_rt & asian_rt>=other_rt & 
+                           asian_rt>=hisp_rt & .3707<entropy & entropy<.7414 & asian_rt<=.8~10,
+                         nam_rt>=white_rt & nam_rt>=black_rt & nam_rt>=asian_rt & nam_rt>=other_rt & nam_rt>=hisp_rt & 
+                           .3707<entropy & entropy<.7414 & nam_rt<=.8~11,
+                         other_rt>=white_rt & other_rt>=nam_rt & other_rt>=asian_rt & other_rt>=black_rt & other_rt>=hisp_rt & 
+                           .3707<entropy & entropy<.7414 & other_rt<=.8~12,
+                         hisp_rt>=white_rt & hisp_rt>=nam_rt & hisp_rt>=asian_rt & hisp_rt>=black_rt & 
+                           hisp_rt>=other_rt & .3707<entropy & entropy<.7414 & hisp_rt<=.8~13,
+                         entropy>.7414 & white_rt<.45 & black_rt<.45 & asian_rt<.45 & nam_rt<.45 & other_rt<.45 & 
+                           hisp_rt<.45~14))
+
+census_na<-census_data_class %>%
+  filter(is.na(class)==TRUE) %>%
+  mutate(class=case_when(white_rt>=black_rt & white_rt>=nam_rt & white_rt>=asian_rt & white_rt>=other_rt & white_rt>=hisp_rt~8,
+                         black_rt>=white_rt & black_rt>=nam_rt & black_rt>=asian_rt & black_rt>=other_rt & black_rt>=hisp_rt~9,
+                         asian_rt>=white_rt & asian_rt>=nam_rt & asian_rt>=black_rt & asian_rt>=other_rt & asian_rt>=hisp_rt~10,
+                         nam_rt>=white_rt & nam_rt>=black_rt & nam_rt>=asian_rt & nam_rt>=other_rt & nam_rt>=hisp_rt~11,
+                         other_rt>=white_rt & other_rt>=nam_rt & other_rt>=asian_rt & other_rt>=black_rt & other_rt>=hisp_rt~12,
+                         hisp_rt>=white_rt & hisp_rt>=nam_rt & hisp_rt>=asian_rt & hisp_rt>=black_rt & hisp_rt>=other_rt~13))
+
+census_data_class<-census_data_class %>%
+  filter(is.na(class)==FALSE) %>%
+  bind_rows(census_na)
+```
+
+Then I write the data to a csv, joining in a fuller class description first.
+
+```{r}
+mm_class<-read_csv("data/mm_classes.csv") 
+
+census_data_class1<-census_data_class %>%
+  rename(class_mm=class) %>%
+  left_join(mm_class)
+
+write_csv(census_data_class1,"data/ustracts_mm_acs_10_17.csv")
+```
+
+I also tally the number of different classifications for tracts. How many changed over time? It looks like only 52,064 tracts stayed the same and 21,963 changed at some point.
+
+```{r}
+census_data_summary<-census_data_class1 %>%
+  ungroup() %>%
+  count(GISJOIN,class_mm) %>%
+  count(GISJOIN)
+
+table(census_data_summary$n)
+```
+
+Here's a table of tract counts by year and class
+
+```{r}
+classcount<-census_data_class1 %>%
+  ungroup() %>%
+  count(class_mm_char,year) %>%
+  spread(year,n)
+
+write_csv(classcount,"data/classcount_2010_2017.csv")
+```
+

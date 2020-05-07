@@ -1,0 +1,20 @@
+term,term_label
+class_char_shrtWhite ld,"White, low div"
+class_char_shrtAsian md,"Asian, mod div"
+class_char_shrtAsian ld,"Asian, low div"
+class_char_shrtBlack md,"Black, mod div"
+class_char_shrtBlack ld,"Black, low div"
+class_char_shrtLatino md,"Latino, mod div"
+class_char_shrtLatino ld,"Latino, low div"
+class_char_shrtNatAm md,"Native, mod div"
+class_char_shrtNatAm ld,"Native, low div"
+class_char_shrtHigh diversity,High diversity
+class_char_shrtOther md,"Other, mod div"
+med_inc1k,Med. income ($1k)
+med_val1k,Med. home value ($1k)
+Supermarket,Supermarket dist
+Grocer,Grocery dist
+pov_pct,% in poverty
+inc150k_pct,% w/income >$150K
+class_char_shrtOther ld,"Other, low div"
+popdens_topcode,Population density

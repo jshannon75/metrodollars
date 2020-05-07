@@ -1,0 +1,10 @@
+term,name
+afam_pct,% African-American
+asian_pct,% Asian American
+hisp_pct,% Hispanic
+pov_pct,% in poverty
+inc150k_pct,% w/income >$150K
+Supermarket,Supermarket distance
+Grocer,Grocery distance
+popdens_topcode,Pop. density
+entropy,Entropy

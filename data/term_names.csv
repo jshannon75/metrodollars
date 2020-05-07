@@ -1,0 +1,22 @@
+term,title,include
+class1c2,"White, low diversity",1
+class1c13,"Latino, moderate diversity",1
+class1c7,"Latino, low diversity",1
+class1c9,"Black, moderate diversity",1
+class1c3,"Black, low diversity",1
+class1c10,"Asian, moderate diversity",1
+class1c4,"Asian, low diversity",1
+class1c14,High diversity,1
+class1c11,"Native american, moderate diversity",0
+class1c12,"Other, moderate diversity",0
+class1c5,"Native American, low diversity",0
+small_ret_cat,Small retail distance,1
+grocer_cat,Grocer distance,1
+super_cat,Supermarket distance,1
+log(popdens),Pop. density,0
+med_inc_cat,Median hh income,1
+med_val_cat,Median home value,1
+snap_cat,SNAP enroll rate,1
+unemp_cat,Unemployment rate,1
+pov_pct,Poverty rate,1
+inc150k_pct,High income,1

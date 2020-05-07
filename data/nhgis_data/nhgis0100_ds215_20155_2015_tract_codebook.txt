@@ -1,0 +1,197 @@
+--------------------------------------------------------------------------------
+Codebook for NHGIS data file 'nhgis0100_ds215_20155_2015_tract'
+--------------------------------------------------------------------------------
+ 
+Contents
+    - Data Summary
+    - Data Dictionary
+    - Citation and Use
+ 
+Additional documentation on NHGIS data sources is available at: 
+    https://www.nhgis.org/documentation/tabular-data 
+ 
+--------------------------------------------------------------------------------
+Data Summary
+--------------------------------------------------------------------------------
+ 
+Year:             2011-2015
+Geographic level: Census Tract (by State--County)
+Dataset:          2015 American Community Survey: 5-Year Data [2011-2015, Block Groups & Larger Areas]
+   NHGIS code:    2011_2015_ACS5a
+   NHGIS ID:      ds215
+Breakdown(s):     Geographic Subarea:
+                     Total area (00)
+Data type(s):     (E) Estimates
+                  (M) Margins of error
+ 
+Tables:
+ 
+1. Hispanic or Latino Origin by Race
+   Universe:    Total population
+   Source code: B03002
+   NHGIS code:  ADK5
+ 
+--------------------------------------------------------------------------------
+Data Dictionary
+--------------------------------------------------------------------------------
+ 
+Context Fields 
+        GISJOIN:     GIS Join Match Code
+        YEAR:        Data File Year
+        REGIONA:     Region Code
+        DIVISIONA:   Division Code
+        STATE:       State Name
+        STATEA:      State Code
+        COUNTY:      County Name
+        COUNTYA:     County Code
+        COUSUBA:     County Subdivision Code
+        PLACEA:      Place Code
+        TRACTA:      Census Tract Code
+        BLKGRPA:     Block Group Code
+        CONCITA:     Consolidated City Code
+        AIANHHA:     American Indian Area/Alaska Native Area/Hawaiian Home Land Code
+        RES_ONLYA:   American Indian Area/Alaska Native Area (Reservation or Statistical Entity Only) Code
+        TRUSTA:      American Indian Area (Off-Reservation Trust Land Only)/Hawaiian Home Land Code
+        AITSCEA:     Tribal Subdivision/Remainder Code
+        ANRCA:       Alaska Native Regional Corporation Code
+        CBSAA:       Metropolitan Statistical Area/Micropolitan Statistical Area Code
+        CSAA:        Combined Statistical Area Code
+        METDIVA:     Metropolitan Division Code
+        NECTAA:      New England City and Town Area Code
+        CNECTAA:     Combined New England City and Town Area Code
+        NECTADIVA:   New England City and Town Area Division Code
+        UAA:         Urban Area Code
+        CDCURRA:     Congressional District (2013-2017, 113th-114th Congress) Code
+        SLDUA:       State Legislative District (Upper Chamber) Code
+        SLDLA:       State Legislative District (Lower Chamber) Code
+        ZCTA5A:      5-Digit ZIP Code Tabulation Area Code
+        SUBMCDA:     Subminor Civil Division Code
+        SDELMA:      School District (Elementary)/Remainder Code
+        SDSECA:      School District (Secondary)/Remainder Code
+        SDUNIA:      School District (Unified)/Remainder Code
+        PUMA5A:      Public Use Microdata Sample Area (PUMA) Code
+        BTTRA:       Tribal Census Tract Code
+        BTBGA:       Tribal Block Group Code
+ 
+Data Type (E):
+    Estimates
+ 
+        NAME_E:      Area Name
+ 
+    Table 1:     Hispanic or Latino Origin by Race
+    Universe:    Total population
+    Source code: B03002
+    NHGIS code:  ADK5
+        ADK5E001:    Total
+        ADK5E002:    Not Hispanic or Latino
+        ADK5E003:    Not Hispanic or Latino: White alone
+        ADK5E004:    Not Hispanic or Latino: Black or African American alone
+        ADK5E005:    Not Hispanic or Latino: American Indian and Alaska Native alone
+        ADK5E006:    Not Hispanic or Latino: Asian alone
+        ADK5E007:    Not Hispanic or Latino: Native Hawaiian and Other Pacific Islander alone
+        ADK5E008:    Not Hispanic or Latino: Some other race alone
+        ADK5E009:    Not Hispanic or Latino: Two or more races
+        ADK5E010:    Not Hispanic or Latino: Two or more races: Two races including Some other race
+        ADK5E011:    Not Hispanic or Latino: Two or more races: Two races excluding Some other race, and three or more races
+        ADK5E012:    Hispanic or Latino
+        ADK5E013:    Hispanic or Latino: White alone
+        ADK5E014:    Hispanic or Latino: Black or African American alone
+        ADK5E015:    Hispanic or Latino: American Indian and Alaska Native alone
+        ADK5E016:    Hispanic or Latino: Asian alone
+        ADK5E017:    Hispanic or Latino: Native Hawaiian and Other Pacific Islander alone
+        ADK5E018:    Hispanic or Latino: Some other race alone
+        ADK5E019:    Hispanic or Latino: Two or more races
+        ADK5E020:    Hispanic or Latino: Two or more races: Two races including Some other race
+        ADK5E021:    Hispanic or Latino: Two or more races: Two races excluding Some other race, and three or more races
+ 
+Data Type (M):
+    Margins of error
+ 
+        NAME_M:      Area Name
+ 
+    Table 1:     Hispanic or Latino Origin by Race
+    Universe:    Total population
+    Source code: B03002
+    NHGIS code:  ADK5
+        ADK5M001:    Total
+        ADK5M002:    Not Hispanic or Latino
+        ADK5M003:    Not Hispanic or Latino: White alone
+        ADK5M004:    Not Hispanic or Latino: Black or African American alone
+        ADK5M005:    Not Hispanic or Latino: American Indian and Alaska Native alone
+        ADK5M006:    Not Hispanic or Latino: Asian alone
+        ADK5M007:    Not Hispanic or Latino: Native Hawaiian and Other Pacific Islander alone
+        ADK5M008:    Not Hispanic or Latino: Some other race alone
+        ADK5M009:    Not Hispanic or Latino: Two or more races
+        ADK5M010:    Not Hispanic or Latino: Two or more races: Two races including Some other race
+        ADK5M011:    Not Hispanic or Latino: Two or more races: Two races excluding Some other race, and three or more races
+        ADK5M012:    Hispanic or Latino
+        ADK5M013:    Hispanic or Latino: White alone
+        ADK5M014:    Hispanic or Latino: Black or African American alone
+        ADK5M015:    Hispanic or Latino: American Indian and Alaska Native alone
+        ADK5M016:    Hispanic or Latino: Asian alone
+        ADK5M017:    Hispanic or Latino: Native Hawaiian and Other Pacific Islander alone
+        ADK5M018:    Hispanic or Latino: Some other race alone
+        ADK5M019:    Hispanic or Latino: Two or more races
+        ADK5M020:    Hispanic or Latino: Two or more races: Two races including Some other race
+        ADK5M021:    Hispanic or Latino: Two or more races: Two races excluding Some other race, and three or more races
+ 
+--------------------------------------------------------------------------------
+Citation and Use of NHGIS Data
+--------------------------------------------------------------------------------
+ 
+All persons are granted a limited license to use this documentation and the
+accompanying data, subject to the following conditions:
+
+* REDISTRIBUTION: You will not redistribute the data without permission.
+
+  You may publish a subset of the data to meet journal requirements for accessing 
+  data related to a particular publication. Contact us for permission for any other 
+  redistribution; we will consider requests for free and commercial redistribution.
+
+* CITATION: You will cite NHGIS appropriately.
+
+    * Publications and research reports employing NHGIS data (either tabular or GIS) 
+      should include the following citation:
+
+        Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. 
+        IPUMS National Historical Geographic Information System: Version 13.0 
+        [Database]. Minneapolis: University of Minnesota. 2018. 
+        http://doi.org/10.18128/D050.V13.0
+
+    * Publications and research reports employing school attendance areas data 
+      (either tabular or GIS) must cite it appropriately. The citation should 
+      include the following:
+
+        The College of William and Mary and the Minnesota Population Center.
+        School Attendance Boundary Information System (SABINS): Version 1.0.
+        Minneapolis, MN: University of Minnesota 2011.
+
+    * For policy briefs, online resources, or articles in the popular press, we 
+      recommend that you cite the use of NHGIS data as follows:
+
+        IPUMS NHGIS, University of Minnesota, www.nhgis.org.
+
+    * If possible, citations involving school attendance areas should also include
+      the URL for the SABINS site:
+
+        http://www.sabinsdata.org/.
+
+These terms of use are a legally binding agreement. You can use the data only in 
+accordance with these terms, and any other use is a violation of the agreement. 
+Violations may result in revocation of the agreement and prohibition from using other 
+IPUMS data. If IPUMS or our partners are harmed from your violation, you are 
+responsible for all damages, including reasonable attorney's fees and expenses.
+        
+In addition, we request that users send us a copy of any publications, research
+reports, or educational material making use of the data or documentation.
+
+Send electronic material to: nhgis@umn.edu
+
+Printed matter should be sent to:
+
+    IPUMS NHGIS
+    Institute for Social Research and Data Innovation
+    University of Minnesota
+    50 Willey Hall
+    225 19th Ave S
+    Minneapolis, MN 55455
