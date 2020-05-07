@@ -1,6 +1,6 @@
 # Repository for data on metropolitan dollar store expansion
 
-This repo has data used for the article "Dollar stores, retailer redlining, and the metropolitan geographies of precarious consumption," published in the *Annals of the American Association of Geographers*. The author's version of this manuscript is located on his professional website.
+This repo has data used for the article "Dollar stores, retailer redlining, and the metropolitan geographies of precarious consumption," published in the *Annals of the American Association of Geographers*. The author's version of this manuscript is located [on his professional website](http://jerry.shannons.us/publications.html).
 
 There are three main scripts in the scripts folder of this repo:
 
